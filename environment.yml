@@ -1,0 +1,13 @@
+name: food_diary_bot
+dependencies:
+- pip
+- pyyaml
+- pip:
+    - google_spreadsheet
+    - google-api-python-client
+    - google-auth-httplib2
+    - google-auth-oauthlib
+    - python-telegram-bot
+    - python-telegram-bot[socks]
+    - PySocks
+prefix: /Users/Svetlana/anaconda3/envs/food_diary_bot
