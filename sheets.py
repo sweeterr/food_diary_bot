@@ -30,6 +30,12 @@ def get_creds(configs: Config):
     return creds
 
 
+def get_sheet_title(service, configs):
+    sheet_metadata = service.spreadsheets().get(spreadsheetId=configs.google["spreadsheet_id"]).execute()
+    title = sheet_metadata.get("properties").get("title")
+    return title
+
+
 def update_sheet(record: Record, test=True):
     configs = Config()
     creds = get_creds(configs)
@@ -37,19 +43,24 @@ def update_sheet(record: Record, test=True):
     values = [record.row]
     body = {"values": values}
     if test:
-        result = service.spreadsheets().values().append(
-            spreadsheetId=configs.google["spreadsheet_id"], range=configs.google["test_sheet_name"],
-            valueInputOption="RAW", body=body).execute()
+        sheet_range = configs.google["test_sheet_name"]
     else:
-        result = service.spreadsheets().values().append(
-            spreadsheetId=configs.google["spreadsheet_id"], range=configs.google["prod_sheet_name"],
-            valueInputOption="RAW", body=body).execute()
-    print(f"{result.get('updates').get('updatedCells')} cells updated.")
+        sheet_range = configs.google["prod_sheet_name"]
+    result = service.spreadsheets().values().append(
+        spreadsheetId=configs.google["spreadsheet_id"], range=sheet_range,
+        valueInputOption="RAW", body=body).execute()
+    sheet_title = get_sheet_title(service, configs)
+    logging.info(f"Google doc '{sheet_title}', sheet '{sheet_range}' updated "
+                 f"with {result.get('updates').get('updatedCells')} values: "
+                 f"{' '.join(values[0])}.")
 
 
 def main():
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                        level=logging.INFO)
     record = Record("tvorog", "food")
     update_sheet(record, test=True)
+
 
 
 if __name__ == "__main__":
